@@ -14,18 +14,10 @@
             font-family: Arial, sans-serif;
         }
         #login-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            width: 300px;
+            display: none; /* Giriş formunu gizle */
         }
         #route-planner {
+            display: block !important; /* Route planner'ı göster */
             position: absolute;
             top: 10px;
             left: 10px;
@@ -35,7 +27,6 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
             z-index: 1000;
             width: 300px;
-            display: none;
             margin-right: 50px;
         }
         #map {
@@ -173,22 +164,6 @@
     </style>
 </head>
 <body>
-    <div id="login-container">
-        <h2>Route Planner Login</h2>
-        <form id="login-form">
-            <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit">Login</button>
-            <div id="login-error" class="error-message">Invalid username or password</div>
-        </form>
-    </div>
-
     <div id="route-planner">
         <h2>Route Planner</h2>
         <form id="route-form">
@@ -223,30 +198,23 @@
     <div id="map"></div>
 
     <script>
+        // Sayfa yüklendiğinde giriş kontrolü yap
+        window.onload = function() {
+            // Session kontrolü
+            if (!sessionStorage.getItem('isLoggedIn')) {
+                // Giriş yapılmamışsa login sayfasına yönlendir
+                window.location.href = 'index.html';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            const loginContainer = document.getElementById('login-container');
             const routePlanner = document.getElementById('route-planner');
-            const loginForm = document.getElementById('login-form');
             const routeForm = document.getElementById('route-form');
-            const loginError = document.getElementById('login-error');
             const loadingDiv = document.getElementById('loading');
             let map = null;
 
-            // Login form handler
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-
-                // Simple validation (replace with actual authentication)
-                if (username === 'admin' && password === 'admin123') {
-                    loginContainer.style.display = 'none';
-                    routePlanner.style.display = 'block';
-                    initializeMap();
-                } else {
-                    loginError.style.display = 'block';
-                }
-            });
+            // Haritayı hemen başlat
+            initializeMap();
 
             // Route form handler
             routeForm.addEventListener('submit', async function(e) {
@@ -499,27 +467,38 @@
             });
 
             function initializeMap() {
+                if (map) return; // Eğer harita zaten başlatılmışsa tekrar başlatma
+
                 try {
+                    // Harita container'ını kontrol et
+                    const mapContainer = document.getElementById('map');
+                    if (!mapContainer) {
+                        console.error('Map container not found');
+                        return;
+                    }
+
+                    // Haritayı başlat
                     map = L.map('map', {
-                        center: [39.8283, -98.5795],
+                        center: [39.8283, -98.5795], // Amerika'nın merkezi
                         zoom: 4,
                         zoomControl: false
                     });
 
-                    // Zoom kontrollerini sağ üst köşeye ekle
+                    // Zoom kontrollerini ekle
                     L.control.zoom({
                         position: 'topright'
                     }).addTo(map);
 
-                    // OpenStreetMap tile layer
+                    // OpenStreetMap tile layer'ı ekle
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '© OpenStreetMap contributors',
                         maxZoom: 19
                     }).addTo(map);
 
+                    console.log('Map initialized successfully');
                 } catch (error) {
                     console.error('Map initialization error:', error);
-                    alert('An error occurred while initializing the map. Please refresh the page.');
+                    alert('Harita başlatılırken bir hata oluştu. Lütfen sayfayı yenileyin.');
                 }
             }
         });
